@@ -157,6 +157,7 @@ brain/         dashboard (eyes), show controller, voice, expressions, teleop, fo
 jero_link/     pip package: UDP + HMAC command protocol, client and receiver
 training/      GPU server: set up, train, watch in MuJoCo, deploy a policy
 tools/         pose, bus and IMU tests, dry run, e-stop, pad test, servo configuration
+cad_parts/     printable parts for the new design: D455 head, leg pods, trunk top, 6002Z bearing parts
 upstream/      pinned git submodules (read-only)
 tests/         hardware-free tests
 ```
