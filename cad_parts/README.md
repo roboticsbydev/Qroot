@@ -12,6 +12,11 @@ restructured, this folder becomes the single source.
 | `04_reference_assembly/` | Full Jero RB3 + D455 + LiPo design reference (FreeCAD) | FCStd |
 | `05_bearing_6002z/` | **Print these** instead of the matching `01_` parts: re-cut for 6002Z bearings | STL + STEP |
 
+**In the git repo:** only `03_jero_custom/` and `05_bearing_6002z/`, without four files over 20 MB
+(`head_6002z.step`, `head_face_draft_6002z.step`, `jero_internal_rb3.FCStd`, `underbody_core_proposal.FCStd`).
+The other folders stay on the design machine, so `make_d455_head.py` needs `04_reference_assembly/` there to
+regenerate the head.
+
 Not copied because of size or vendor origin (still in `cad/rb3_realsense/`): the 240 MB
 `onshape/*.step`, the RB3/D455 vendor models in `sources/`, and `cad-fit-check/*.brep`.
 
