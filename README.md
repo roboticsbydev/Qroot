@@ -2,45 +2,121 @@
   <img src="docs/images/qroot-logo.png" alt="Qroot micro bot" width="320">
 </p>
 
-# Physical AI on Qualcomm: a walking robot on the RB3 Gen 2
+# Qroot: an open source, hardware-agnostic stack for Physical AI
 
-This repo is an end-to-end physical AI stack on one Qualcomm board. A **Qualcomm RB3 Gen 2** (QCS6490) runs
-everything a small walking robot needs, with no PC or cloud in the loop for control:
-- **Sense:** depth and colour from an Intel RealSense D455, and the board's onboard IMU (TDK ICM-42688), read through
-  Qualcomm's sensing hub.
-- **Act:** a reinforcement-learning walking policy, trained in MuJoCo and run at 50 Hz on the board, driving 14 servos.
-- **Interact:** a live dashboard, head-follow, spoken lines and a microphone.
+A walking micro biped, one edge board, ROS 2 at the edges.
 
-```
- PS4 pad ──BT──┐
-               ▼
- RealSense ──USB──►  Qualcomm RB3 Gen 2 (QCS6490, Ubuntu)  ──USB──► Pico bridge ──► servo bus (14× STS3215)
- D455 (head)         act:     RL walking policy, 50 Hz, own core
-                     sense:   onboard IMU via the sensing hub, depth + colour
-                     interact: dashboard :8080, head-follow, voice
-```
-
-| Layer | What runs on the QCS6490 | Where |
-|---|---|---|
-| Locomotion | RL policy (ONNX) at 50 Hz, real-time priority on the fastest core; loop work 0.75 ms | `robot/jero_walk.py` |
-| Balance sensing | onboard ICM-42688 at 200 Hz through Qualcomm's sensing hub | `robot/imu_qsh.py` |
-| Perception | aligned depth + colour at 15 fps, nearest-object tracking, head-follow | `brain/eyes.py` |
-| Interaction | dashboard in any browser: camera, depth, commands, speech text, path walked | `brain/eyes.py`, `brain/show.py` |
-| Voice | spoken lines (ElevenLabs, cached for offline), mic for speech commands | `brain/show.py`, `brain/voice.py` |
-
-Next: move perception models onto the board's Hexagon NPU (QNN), for example person detection.
-
-## The robot: Qroot micro bot
+Qroot is a full physical AI stack you can read, run and change: training, deployment, compute, actuation,
+perception and the body. Every model runs on the robot, with no PC or cloud in the loop. Each layer has one job
+and one interface, so you can swap the camera, the chip or the whole body and keep the rest.
 
 <p align="center">
-  <img src="docs/images/qroot.jpg" alt="Qroot: green head with a RealSense depth camera on a black two-legged body" width="380">
+  <a href="docs/media/qroot_walk.mp4">
+    <img src="docs/media/qroot_walk.gif" alt="Qroot's new design in MuJoCo: stand, walk forward, turn, sidestep, take a sideways push, stop" width="640">
+  </a>
+</p>
+<p align="center">
+  <sub>The new design in MuJoCo at 50 Hz: stand, walk, turn, sidestep, take a 0.5 m/s sideways push, stop.
+  Sped up 1.5×. Click for the <a href="docs/media/qroot_walk.mp4">full video</a>.</sub>
 </p>
 
-Qroot is the open-source demonstrator for this stack. It is built on the [Open Duck Mini v2](https://github.com/apirrone/Open_Duck_Mini)
-mechanics: 14 Feetech STS3215 servos, with the RealSense in the head and the RB3 Gen 2 in the body.
+## Why a full stack
+
+Digital AI is one layer: software. Physical AI is seven, and each one is a different skill: the AI model,
+perception, simulation, real-time control, compute, actuation and mechanics. They all have to work in the same
+instant. Qroot builds all seven on one small robot and opens every one of them.
+
+## Six layers, each one replaceable
+
+| Layer | In Qroot today | Designed to swap with |
+|---|---|---|
+| Train | MuJoCo MJX + Brax PPO, exported to ONNX | any simulator that exports ONNX |
+| Deploy | walking policy on the CPU, speech on the NPU through [Chipwright](https://github.com/nameissakthi25/chipwright) | other chips as Chipwright adds targets |
+| Compute | Qualcomm RB3 Gen 2 (QCS6490) | other chipsets, in progress |
+| Actuation | Feetech STS bus servos + a custom Pico bridge | other serial-bus servos |
+| Perception | Intel RealSense D455 | OAK-D Lite, other depth cameras |
+| Body | micro biped, 14 joints | arm, quadruped, base with an arm |
+
+## Meet Qroot
+
+Qroot is the first robot on the stack.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/qroot-v2.png" alt="Qroot new design: white camera head with two black horns, green body, white leg pods, black legs" height="380"></td>
+    <td align="center"><img src="docs/images/qroot-v2-inside.png" alt="Cutaway of the new Qroot body showing the electronics packed inside the trunk" height="380"></td>
+    <td align="center"><img src="docs/images/qroot.jpg" alt="First Qroot build: green head with a RealSense depth camera on a black two-legged body" height="380"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>New design</b></td>
+    <td align="center"><b>New design, inside</b><br>the electronics sit inside the trunk</td>
+    <td align="center"><b>First build</b></td>
+  </tr>
+</table>
+
+- **Depth camera:** a RealSense D455 is the head.
+- **One board, carried:** a Qualcomm RB3 Gen 2 inside the body.
+- **14 bus servos:** Feetech STS3215, on one bus.
+- **Speech:** recognition and text-to-speech on the board.
 
 The code, the Python package (`jero_link`) and the paths on the robot (`~/Jero`, `~/.config/jero`) still use the
 robot's earlier name, Jero.
+
+## Every model runs on the robot
+
+| Model | Where | Detail |
+|---|---|---|
+| Walking policy | CPU, under 0.5 ms | ONNX, 101 inputs, 14 joint targets, 50 times a second. Small enough that the CPU is the right place for it. |
+| Speech recognition and text-to-speech | Hexagon NPU | Quantised and converted with [Chipwright](https://github.com/nameissakthi25/chipwright). Detection is next. |
+
+Nothing leaves the board. Latency is fixed, the robot walks with Wi-Fi off, and camera frames stay on the robot.
+
+## Inside one 20 ms tick
+
+The walk loop is one process on the fastest core at real-time priority (`robot/jero_walk.py`). Measured on the
+RB3 Gen 2: 3.8 ms servo bus read and 0.75 ms compute in a 20 ms budget, with no missed ticks.
+
+1. **Read:** 14 servo positions and the newest IMU sample.
+2. **Observe:** build 101 values, including the velocity command.
+3. **Policy:** ONNX on the CPU, under 0.5 ms.
+4. **Write:** 14 joint targets in one sync write.
+
+Nothing that can block goes inside the loop:
+- **Servo bus:** the Pico bridge answers every transaction once, with all the replies or one error marker. A lost
+  reply costs one 20 ms step, not a 1 s USB timeout.
+- **IMU:** the board's ICM-42688 is streamed through Qualcomm's sensing hub (`robot/imu_qsh.py`). The loop takes
+  the newest sample in 0.05 ms. Reading sysfs files inside the tick took 14 ms.
+
+## ROS 2 is where the parts swap
+
+**Status: designed, the bridge is not built yet.** Today the robot is driven by a gamepad or by `jero_link`
+(signed UDP).
+
+The 20 ms policy loop stays outside the ROS 2 graph: read, policy, write, in one process on one core, with no DDS
+or executor. One thin bridge node translates to standard interfaces and never sits between the policy and the
+servos.
+
+| On the robot | ROS 2 interface | What you get |
+|---|---|---|
+| Signed UDP velocity command, 20 Hz | `/cmd_vel` (Twist) | `teleop_twist_keyboard`, Nav2 |
+| Gamepad always beats the link | `twist_mux` priorities + e-stop lock | one place for "who drives" |
+| Commands expire after 500 ms | `twist_mux` timeout | silence means stop |
+| 14 servo positions each tick | `/joint_states` | `robot_state_publisher`, RViz |
+| IMU sample each tick | `/imu/data` | rosbag, filters, plots |
+| RealSense D455 on USB | `realsense2_camera` | depth, point clouds, TF |
+
+Navigation follows the same path: the depth camera sees, a point cloud and TF make the map, Nav2 plans, and
+`/cmd_vel` goes to the policy.
+
+## One stack, other bodies
+
+The body changes. The recipe stays: train in MuJoCo, export ONNX, one real-time loop, the servo bus bridge, and
+ROS 2 at the edges.
+
+- **Arm:** same servos and bus bridge, with a policy trained to reach instead of to walk.
+- **Quadruped:** same board and loop, more joints on the same bus.
+- **Base with an arm:** the wheels take `/cmd_vel` directly, and the arm reuses the servo layer.
+- **Humanoid navigation:** use the small biped to train and test navigation before a full-size robot.
 
 ## Branches
 
@@ -63,7 +139,7 @@ The steps in order are in [docs/commands/](docs/commands/README.md):
 Setup and bring-up details are in [docs/rb3gen2.md](docs/rb3gen2.md).
 
 ```bash
-git clone https://github.com/dev-ansh-r/Qroot ~/Jero
+git clone https://github.com/roboticsbydev/Qroot ~/Jero
 ~/Jero/robot/setup_rb3.sh            # packages, Python env, runtime, policy, link key, Bluetooth, udev
 ~/Jero/robot/setup_vision.sh         # RealSense + OpenCV
 ~/Jero/tools/rb3_dryrun.sh           # whole-robot check, nothing moves
@@ -76,12 +152,12 @@ git clone https://github.com/dev-ansh-r/Qroot ~/Jero
 
 ```
 docs/          RB3 bring-up, command sheets, BOM, printing, wiring, training, link spec, demo day
-robot/         walk loop (upstream policy + controller mux), servo IO, IMU drivers, setup scripts
+robot/         walk loop (policy + controller mux), servo IO, IMU drivers, setup scripts
 brain/         dashboard (eyes), show controller, voice, expressions, teleop, follow-me
 jero_link/     pip package: UDP + HMAC command protocol, client and receiver
 training/      GPU server: set up, train, watch in MuJoCo, deploy a policy
 tools/         pose, bus and IMU tests, dry run, e-stop, pad test, servo configuration
-upstream/      pinned git submodules (read-only): Open_Duck_Mini, _Runtime, _Playground
+upstream/      pinned git submodules (read-only)
 tests/         hardware-free tests
 ```
 
@@ -89,27 +165,12 @@ tests/         hardware-free tests
 
 **Laptop**
 ```bash
-git clone --recurse-submodules --shallow-submodules https://github.com/dev-ansh-r/Qroot && cd Qroot
+git clone --recurse-submodules --shallow-submodules https://github.com/roboticsbydev/Qroot && cd Qroot
 pip install -e jero_link[test] numpy && make test
 ```
 
 **GPU server (training)**
 ```bash
-git clone --recurse-submodules=upstream/Open_Duck_Playground --shallow-submodules https://github.com/dev-ansh-r/Qroot
+git clone --recurse-submodules=upstream/Open_Duck_Playground --shallow-submodules https://github.com/roboticsbydev/Qroot
 Qroot/training/setup_server.sh && Qroot/training/train.sh
 ```
-
-## Pinned upstream
-
-| Repo | Branch | Commit |
-|---|---|---|
-| [apirrone/Open_Duck_Mini](https://github.com/apirrone/Open_Duck_Mini) | v2 | `b23317a` (STLs, docs, `BEST_WALK_ONNX_2.onnx`) |
-| [apirrone/Open_Duck_Mini_Runtime](https://github.com/apirrone/Open_Duck_Mini_Runtime) | v2 | `376de65` |
-| [apirrone/Open_Duck_Playground](https://github.com/apirrone/Open_Duck_Playground) | main | `b9be205` |
-
-Bump a submodule deliberately (`git -C upstream/<repo> checkout <sha>`), then note why in the commit message.
-
-## Credits
-
-The mechanical design, runtime and training environment are by Antoine Pirrone and the Open Duck community
-(Open_Duck_Mini is Apache-2.0). Qroot adds the integration layer in this repo.
