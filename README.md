@@ -26,6 +26,10 @@ Digital AI is one layer: software. Physical AI is seven, and each one is a diffe
 perception, simulation, real-time control, compute, actuation and mechanics. They all have to work in the same
 instant. Qroot builds all seven on one small robot and opens every one of them.
 
+<p align="center">
+  <img src="docs/images/deck/stack-layers.png" alt="Digital AI is one layer, software. Physical AI is seven stacked layers: AI model, perception, simulation, real-time control, compute, actuation and mechanics." width="800">
+</p>
+
 ## Six layers, each one replaceable
 
 | Layer | In Qroot today | Designed to swap with |
@@ -69,23 +73,40 @@ robot's earlier name, Jero.
 | Walking policy | CPU, under 0.5 ms | ONNX, 101 inputs, 14 joint targets, 50 times a second. Small enough that the CPU is the right place for it. |
 | Speech recognition and text-to-speech | Hexagon NPU | Quantised and converted with [Chipwright](https://github.com/nameissakthi25/chipwright). Detection is next. |
 
+<p align="center">
+  <img src="docs/images/deck/edge-ai.png" alt="Three cards: walking policy under 0.5 ms on the CPU; speech recognition and text-to-speech on the NPU; 0 network, nothing leaves the board." width="800">
+</p>
+
 Nothing leaves the board. Latency is fixed, the robot walks with Wi-Fi off, and camera frames stay on the robot.
+
+### Getting models onto the NPU: Chipwright
+
+[Chipwright](https://github.com/nameissakthi25/chipwright) (open source, MIT) takes a model to the edge board in three
+steps: bring your model, connect your board, and it handles QAIRT conversion, AIMET quantisation and the serialised
+binaries. Qualcomm is first, with more chipsets planned. It has a desktop app and skills for coding agents.
+
+<p align="center">
+  <img src="docs/images/deck/chipwright.png" alt="Without Chipwright: a hosted hub for covered models only, or quantise, convert and build the binary by hand for every model, chip and SDK. With Chipwright: bring your model, connect your board, and it runs on the NPU." width="800">
+</p>
 
 ## Inside one 20 ms tick
 
 The walk loop is one process on the fastest core at real-time priority (`robot/jero_walk.py`). Measured on the
 RB3 Gen 2: 3.8 ms servo bus read and 0.75 ms compute in a 20 ms budget, with no missed ticks.
 
-1. **Read:** 14 servo positions and the newest IMU sample.
-2. **Observe:** build 101 values, including the velocity command.
-3. **Policy:** ONNX on the CPU, under 0.5 ms.
-4. **Write:** 14 joint targets in one sync write.
+<p align="center">
+  <img src="docs/images/deck/realtime-tick.png" alt="A 20 ms bar: 3.8 ms servo bus read and 0.75 ms compute, the rest headroom. Below it the four steps: read 14 servo positions and the newest IMU sample, observe 101 values, run the ONNX policy on the CPU in under 0.5 ms, write 14 joint targets in one sync write." width="800">
+</p>
 
 Nothing that can block goes inside the loop:
 - **Servo bus:** the Pico bridge answers every transaction once, with all the replies or one error marker. A lost
   reply costs one 20 ms step, not a 1 s USB timeout.
 - **IMU:** the board's ICM-42688 is streamed through Qualcomm's sensing hub (`robot/imu_qsh.py`). The loop takes
   the newest sample in 0.05 ms. Reading sysfs files inside the tick took 14 ms.
+
+<p align="center">
+  <img src="docs/images/deck/stall-reads.png" alt="Servo bus: one missing reply cost 1 s (50 ticks) on a USB adapter and costs 1 step (20 ms) through the Pico bridge. IMU: reading sysfs files took 14 ms of a 20 ms tick, streaming takes 0.05 ms." width="800">
+</p>
 
 ## ROS 2 is where the parts swap
 
@@ -95,6 +116,10 @@ Nothing that can block goes inside the loop:
 The 20 ms policy loop stays outside the ROS 2 graph: read, policy, write, in one process on one core, with no DDS
 or executor. One thin bridge node translates to standard interfaces and never sits between the policy and the
 servos.
+
+<p align="center">
+  <img src="docs/images/deck/ros2-swap.png" alt="Swap the camera through image topics and /imu/data, the driver through /cmd_vel, and the body through /joint_states and TF. All three meet in the ROS 2 graph; a thin bridge connects it to the 20 ms policy loop, which stays outside the graph." width="800">
+</p>
 
 | On the robot | ROS 2 interface | What you get |
 |---|---|---|
@@ -108,15 +133,18 @@ servos.
 Navigation follows the same path: the depth camera sees, a point cloud and TF make the map, Nav2 plans, and
 `/cmd_vel` goes to the policy.
 
+<p align="center">
+  <img src="docs/images/deck/seeing-to-walking.png" alt="Top-down sketch: the depth camera sees obstacles, a dotted path is planned around them to a goal. Steps: see with the depth camera, map with a point cloud and TF, plan with Nav2, walk with /cmd_vel into the policy." width="800">
+</p>
+
 ## One stack, other bodies
 
 The body changes. The recipe stays: train in MuJoCo, export ONNX, one real-time loop, the servo bus bridge, and
 ROS 2 at the edges.
 
-- **Arm:** same servos and bus bridge, with a policy trained to reach instead of to walk.
-- **Quadruped:** same board and loop, more joints on the same bus.
-- **Base with an arm:** the wheels take `/cmd_vel` directly, and the arm reuses the servo layer.
-- **Humanoid navigation:** use the small biped to train and test navigation before a full-size robot.
+<p align="center">
+  <img src="docs/images/deck/other-bodies.png" alt="Four bodies on the same stack: an arm with the same servos and bus bridge; a quadruped with the same board and loop; a wheeled base with an arm that takes /cmd_vel directly; and the small biped used to train and test humanoid navigation." width="800">
+</p>
 
 ## Branches
 
