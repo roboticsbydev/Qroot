@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/qroot-logo.png" alt="Qroot micro bot" width="180">
+  <img src="docs/images/qroot-banner.jpg" alt="Qroot micro bot: an open source, hardware-agnostic stack for Physical AI. A walking micro biped, one edge board, ROS 2. Render of the new design on a green circle." width="100%">
 </p>
 
 # Qroot: an open source, hardware-agnostic stack for Physical AI
