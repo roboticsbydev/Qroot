@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/qroot-logo.png" alt="Qroot micro bot" width="320">
+  <img src="docs/images/qroot-logo.png" alt="Qroot micro bot" width="180">
 </p>
 
 # Qroot: an open source, hardware-agnostic stack for Physical AI
@@ -12,7 +12,7 @@ and one interface, so you can swap the camera, the chip or the whole body and ke
 
 <p align="center">
   <a href="docs/media/qroot_walk.mp4">
-    <img src="docs/media/qroot_walk.gif" alt="Left: render of Qroot's new design, a white camera head with black horns on a dark green body. Right: the same design walking in MuJoCo: stand, walk forward, turn, sidestep, take a sideways push, stop." width="100%">
+    <img src="docs/media/qroot_hero.gif" alt="Left: render of Qroot's new design, a white camera head with black horns on a dark green body. Right: the same design walking in MuJoCo: stand, walk forward, turn, sidestep, take a sideways push, stop." width="100%">
   </a>
 </p>
 <p align="center">
