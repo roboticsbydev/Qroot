@@ -45,18 +45,12 @@ instant. Qroot builds all seven on one small robot and opens every one of them.
 
 Qroot is the first robot on the stack.
 
-<table>
-  <tr>
-    <td align="center"><img src="docs/images/qroot-v2.png" alt="Qroot new design: white camera head with two black horns, dark green body, white leg pods, black legs" height="380"></td>
-    <td align="center"><img src="docs/images/qroot-v2-inside.png" alt="Cutaway of the new Qroot body showing the battery, the RB3 Gen 2 and the Pico bridge inside the trunk" height="380"></td>
-    <td align="center"><img src="docs/images/qroot.jpg" alt="First Qroot build: green head with a RealSense depth camera on a black two-legged body" height="380"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>New design</b></td>
-    <td align="center"><b>New design, inside</b><br>battery (orange), RB3 Gen 2 (blue), Pico bridge (yellow)</td>
-    <td align="center"><b>First build</b></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/images/qroot-lineup.png" alt="Three views at the same size. Left: the new design, a white camera head with two black horns on a dark green body with white leg pods and black legs. Middle: the new design cut away, showing the battery (orange), the RB3 Gen 2 (blue) and the Pico bridge (yellow) inside the trunk. Right: photo of the first build, a green head with a RealSense camera on a black two-legged body." width="100%">
+</p>
+<p align="center">
+  <sub><b>New design</b> &nbsp;·&nbsp; <b>New design, inside:</b> battery (orange), RB3 Gen 2 (blue), Pico bridge (yellow) &nbsp;·&nbsp; <b>First build</b></sub>
+</p>
 
 - **Depth camera:** a RealSense D455 is the head.
 - **One board, carried:** a Qualcomm RB3 Gen 2 inside the body.
