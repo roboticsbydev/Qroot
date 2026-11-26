@@ -12,11 +12,11 @@ and one interface, so you can swap the camera, the chip or the whole body and ke
 
 <p align="center">
   <a href="docs/media/qroot_walk.mp4">
-    <img src="docs/media/qroot_walk.gif" alt="Qroot's new design in MuJoCo: stand, walk forward, turn, sidestep, take a sideways push, stop" width="640">
+    <img src="docs/media/qroot_walk.gif" alt="Left: render of Qroot's new design, a white camera head with black horns on a dark green body. Right: the same design walking in MuJoCo: stand, walk forward, turn, sidestep, take a sideways push, stop." width="100%">
   </a>
 </p>
 <p align="center">
-  <sub>The new design in MuJoCo at 50 Hz: stand, walk, turn, sidestep, take a 0.5 m/s sideways push, stop.
+  <sub>The new design, and the same design walking in MuJoCo at 50 Hz: stand, walk, turn, sidestep, take a 0.5 m/s sideways push, stop.
   Sped up 1.5×. Click for the <a href="docs/media/qroot_walk.mp4">full video</a>.</sub>
 </p>
 
